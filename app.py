@@ -1,4 +1,3 @@
-# app.py（編集機能対応）
 from flask import Flask, render_template, request, redirect, url_for, session, send_from_directory
 from werkzeug.utils import secure_filename
 import os
@@ -13,6 +12,8 @@ app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 
+# Flaskのコンテキストプロセッサを定義
+# テンプレート内でMarkdownをレンダリングするための関数を提供
 @app.context_processor
 def utility_processor():
     return dict(render_markdown=render_markdown)

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>メモ・ログアプリ</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .container {
+            display: flex;
+            flex-direction: row;
+        }
+        .sidebar {
+            width: 250px;
+            padding: 1em;
+            background-color: #f8f9fa;
+            flex-shrink: 0;
+        }
+        .main {
+            flex-grow: 1;
+            padding: 1em;
+        }
+        .memo {
+            border: 1px solid #ccc;
+            padding: 1em;
+            margin-bottom: 1em;
+            background: #fff;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .memo-image {
+            max-width: 100%;
+            height: auto;
+            margin-top: 1em;
+        }
+        .memo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5em;
+        }
+        .memo-tags {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 0.5em;
+        }
+        form input, form textarea, form button {
+            display: block;
+            margin-bottom: 0.5em;
+            width: 100%;
+        }
+        .todo-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        .todo-list li {
+            margin-bottom: 0.5em;
+        }
+        .todo-list input[type="text"] {
+            width: 70%;
+            display: inline-block;
+        }
+        .todo-list button, .todo-list a {
+            display: inline-block;
+            margin-left: 0.25em;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="sidebar">
+        <h2>検索</h2>
+        <form method="get" action="/">
+            <input type="text" name="keyword" placeholder="本文検索" value="{{ request.args.get('keyword', '') }}">
+            <input type="text" name="tag" placeholder="タグで検索" list="taglist" value="{{ request.args.get('tag', '') }}">
+            <datalist id="taglist">
+                {% for tag in tags %}
+                    <option value="{{ tag }}">
+                {% endfor %}
+            </datalist>
+            <label>期間</label>
+            <input type="date" name="start" value="{{ request.args.get('start', '') }}">
+            ～
+            <input type="date" name="end" value="{{ request.args.get('end', '') }}">
+            <button type="submit">検索</button>
+        </form>
+
+        <h2>エクスポート</h2>
+        <form method="get" action="/export">
+            <input type="hidden" name="keyword" value="{{ request.args.get('keyword', '') }}">
+            <input type="hidden" name="tag" value="{{ request.args.get('tag', '') }}">
+            <input type="hidden" name="start" value="{{ request.args.get('start', '') }}">
+            <input type="hidden" name="end" value="{{ request.args.get('end', '') }}">
+            <label><input type="radio" name="format" value="markdown" checked> Markdown</label><br>
+            <label><input type="radio" name="format" value="word"> Word</label><br>
+            <button type="submit">検索結果をエクスポート</button>
+        </form>
+
+        <h2>ToDoリスト</h2>
+        <form method="post" action="/todo/add">
+            <input type="text" name="todo_content" placeholder="新しいToDo">
+            <button type="submit">追加</button>
+        </form>
+        <ul class="todo-list">
+            {% for todo in todos %}
+            <li>
+                <form method="post" action="/todo/update/{{ todo.id }}">
+                    <input type="text" name="todo_content" value="{{ todo.content }}">
+                    <button type="submit">更新</button>
+                    <a href="/todo/delete/{{ todo.id }}" onclick="return confirm('削除しますか？')">削除</a>
+                </form>
+            </li>
+            {% endfor %}
+        </ul>
+        <p><a href="/todo/archive">▶ 削除済みToDoを見る</a></p>
+    </div>
+
+    <div class="main">
+        <h1>メモ投稿</h1>
+        <form method="post" enctype="multipart/form-data">
+            <textarea name="content" placeholder="メモ内容" rows="5"></textarea>
+            <input type="text" name="tags" placeholder="タグ (例: tag1, tag2)">
+            <input type="file" name="image">
+            <button type="submit">投稿</button>
+        </form>
+
+        <h2>タイムライン</h2>
+        {% for memo in memos %}
+            <div class="memo">
+                <div class="memo-header">
+                    <strong>{{ memo.created_at }}</strong>
+                    <a href="/edit_form/{{ memo.id }}">編集</a>
+                </div>
+                <div class="memo-content">{{ render_markdown(memo.content) | safe }}</div>
+                {% if memo.image %}
+                    <img src="/uploads/{{ memo.image }}" class="memo-image">
+                {% endif %}
+                <div class="memo-tags">
+                    タグ: {{ memo.tag }}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+</body>
+</html>
