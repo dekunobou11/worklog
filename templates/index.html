@@ -1,0 +1,65 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="layout">
+  <aside class="sidebar">
+    <form method="get" action="{{ url_for('index') }}" class="search-form">
+        <h3>検索</h3>
+        <input type="text" name="keyword" placeholder="本文で検索" value="{{ request.args.get('keyword', '') }}">
+
+        <select name="tag">
+            <option value="">タグを選択</option>
+            {% for tag in tags %}
+                <option value="{{ tag }}" {% if tag == request.args.get('tag') %}selected{% endif %}>{{ tag }}</option>
+            {% endfor %}
+        </select>
+
+        <input type="date" name="start" value="{{ request.args.get('start', '') }}">
+        <input type="date" name="end" value="{{ request.args.get('end', '') }}">
+        <button type="submit">検索</button>
+    </form>
+
+    <form method="get" action="{{ url_for('export') }}" class="export-form">
+        <input type="hidden" name="keyword" value="{{ request.args.get('keyword', '') }}">
+        <input type="hidden" name="tag" value="{{ request.args.get('tag', '') }}">
+        <input type="hidden" name="start" value="{{ request.args.get('start', '') }}">
+        <input type="hidden" name="end" value="{{ request.args.get('end', '') }}">
+
+        <p>出力形式：</p>
+        <label><input type="radio" name="format" value="markdown" checked> Markdown</label><br>
+        <label><input type="radio" name="format" value="word"> Word</label>
+
+        <button type="submit">検索結果をエクスポート</button>
+    </form>
+  </aside>
+
+  <section class="main-content">
+    <div class="post-form">
+        <form method="post" enctype="multipart/form-data">
+            <textarea name="content" placeholder="Markdownでメモを記入" required></textarea>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <input type="text" name="tags" placeholder="タグ (カンマ区切り)" style="flex: 1;">
+                <input type="file" name="image" style="flex: 2;">
+            </div>
+            <button type="submit">投稿</button>
+        </form>
+    </div>
+
+    <div class="timeline">
+        {% for memo in memos %}
+            <div class="memo">
+                <div class="meta">🕒 {{ memo['created_at'] }} | 🏷️ {{ memo['tag'] }}</div>
+                <div class="content">{{ render_markdown(memo['content']) }}</div>
+                {% if memo['image'] %}
+                    <div class="image">
+                        <img src="{{ url_for('uploaded_file', filename=memo['image']) }}" alt="image">
+                    </div>
+                {% endif %}
+                <form method="get" action="{{ url_for('edit_memo_form', memo_id=memo['id']) }}">
+                    <button type="submit">編集</button>
+                </form>
+            </div>
+        {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}

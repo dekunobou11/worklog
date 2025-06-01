@@ -1,0 +1,17 @@
+<!-- templates/edit.html -->
+{% extends "layout.html" %}
+{% block content %}
+<div class="edit-container">
+  <h2>メモを編集</h2>
+  <form method="post" action="{{ url_for('edit_memo', memo_id=memo['id']) }}">
+    <label for="content">内容:</label><br>
+    <textarea name="content" rows="10" required>{{ memo['content'] }}</textarea><br>
+
+    <label for="tags">タグ（カンマ区切り）:</label><br>
+    <input type="text" name="tags" value="{{ memo['tag'] }}"><br>
+
+    <button type="submit">更新する</button>
+    <a href="{{ url_for('index') }}">キャンセル</a>
+  </form>
+</div>
+{% endblock %}
